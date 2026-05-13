@@ -33,19 +33,35 @@ def normalize_space(value: str) -> str:
 
 def parse_due_at(text: str) -> datetime | None:
     patterns = [
+        r"(?P<year>20\d{2})[-/.年](?P<month>\d{1,2})[-/.月](?P<day>\d{1,2})日?"
+        r"(?:\s*星期[一二三四五六日天])?\s*"
+        r"(?P<ampm>上午|下午|AM|PM|am|pm)?\s*"
+        r"(?P<hour>\d{1,2})[:：](?P<minute>\d{2})",
         r"(?P<year>20\d{2})[-/.年](?P<month>\d{1,2})[-/.月](?P<day>\d{1,2})日?\s*(?P<hour>\d{1,2})[:：](?P<minute>\d{2})",
         r"(?P<year>20\d{2})[-/.年](?P<month>\d{1,2})[-/.月](?P<day>\d{1,2})日?",
     ]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
-            parts = {k: int(v) for k, v in match.groupdict(default="0").items()}
+            groupdict = match.groupdict(default="0")
+            parts = {
+                k: int(v)
+                for k, v in groupdict.items()
+                if k in {"year", "month", "day", "hour", "minute"}
+            }
+            hour = parts.get("hour") or 23
+            minute = parts.get("minute") or 59
+            ampm = groupdict.get("ampm", "").lower()
+            if ampm in {"下午", "pm"} and hour < 12:
+                hour += 12
+            elif ampm in {"上午", "am"} and hour == 12:
+                hour = 0
             return datetime(
                 parts["year"],
                 parts["month"],
                 parts["day"],
-                parts.get("hour") or 23,
-                parts.get("minute") or 59,
+                hour,
+                minute,
             )
     return None
 
@@ -79,7 +95,7 @@ def assignment_hash(assignment: Assignment) -> str:
     digest = hashlib.sha256(
         "|".join(
             [
-                "todoist-due-v4",
+                "todoist-due-v5",
                 assignment.course_name,
                 assignment.title,
                 assignment.url,

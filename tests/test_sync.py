@@ -22,6 +22,9 @@ class FakeTodo:
         self.created.append(payload)
         return f"task-{len(self.created)}"
 
+    def find_task_by_source(self, project_id, source_url):
+        return None
+
     def update_task(self, task_id, payload):
         self.updated.append((task_id, payload))
 
@@ -123,3 +126,16 @@ def test_cached_assignment_without_task_mapping_does_not_block_creation(tmp_path
     state.cache_assignments([item])
     assert state.get(item.source_id) is None
     assert state.completed_assignments()[item.source_id].status == AssignmentStatus.COMPLETED
+
+
+def test_sync_reuses_existing_todoist_task_by_source_url(tmp_path):
+    class ExistingTaskTodo(FakeTodo):
+        def find_task_by_source(self, project_id, source_url):
+            return "existing-task"
+
+    todo = ExistingTaskTodo()
+    counts = SyncService(StateStore(tmp_path / "state.sqlite3"), todo, "PKU Course").sync([assignment()])
+    assert counts["created"] == 0
+    assert counts["updated"] == 1
+    assert todo.created == []
+    assert todo.updated[0][0] == "existing-task"

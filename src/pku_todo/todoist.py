@@ -30,11 +30,20 @@ class TodoistClient:
         created = self._request("POST", "/tasks", payload)
         return created["id"]
 
+    def find_task_by_source(self, project_id: str, source_url: str) -> str | None:
+        for task in self._paged_get("/tasks", {"project_id": project_id}):
+            if source_url in (task.get("description") or ""):
+                return task["id"]
+        return None
+
     def update_task(self, task_id: str, payload: dict[str, Any]) -> None:
         self._request("POST", f"/tasks/{task_id}", payload)
 
     def complete_task(self, task_id: str) -> None:
         self._request("POST", f"/tasks/{task_id}/close")
+
+    def delete_task(self, task_id: str) -> None:
+        self._request("DELETE", f"/tasks/{task_id}")
 
     def _paged_get(self, path: str, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
         values: list[dict[str, Any]] = []

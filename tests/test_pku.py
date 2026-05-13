@@ -8,6 +8,18 @@ def test_parse_due_at_chinese_datetime():
     assert parse_due_at("截止时间：2026年5月1日 23:30") == datetime(2026, 5, 1, 23, 30)
 
 
+def test_parse_due_at_chinese_weekday_afternoon():
+    assert parse_due_at("到期日期 2026年5月19日 星期二 下午6:30") == datetime(
+        2026, 5, 19, 18, 30
+    )
+
+
+def test_parse_due_at_chinese_weekday_morning_midnight():
+    assert parse_due_at("到期日期 2026年5月19日 星期二 上午12:30") == datetime(
+        2026, 5, 19, 0, 30
+    )
+
+
 def test_parse_due_at_date_defaults_to_end_of_day():
     assert parse_due_at("Due: 2026-05-01") == datetime(2026, 5, 1, 23, 59)
 

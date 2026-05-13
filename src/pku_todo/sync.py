@@ -49,14 +49,19 @@ class SyncService:
             mapping = self.state.get(assignment.source_id)
             if mapping is None:
                 payload = task_payload(assignment) | {"project_id": project_id}
-                task_id = self.todo.create_task(payload)
-                counts["created"] += 1
-                if assignment.status == AssignmentStatus.COMPLETED:
-                    self.todo.complete_task(task_id)
-                    counts["completed"] += 1
-                elif self.bark is not None:
-                    self.bark.notify_new_assignment(assignment)
-                    counts["notified"] += 1
+                task_id = self.todo.find_task_by_source(project_id, assignment.url)
+                if task_id is None:
+                    task_id = self.todo.create_task(payload)
+                    counts["created"] += 1
+                    if assignment.status == AssignmentStatus.COMPLETED:
+                        self.todo.complete_task(task_id)
+                        counts["completed"] += 1
+                    elif self.bark is not None:
+                        self.bark.notify_new_assignment(assignment)
+                        counts["notified"] += 1
+                elif assignment.status != AssignmentStatus.COMPLETED:
+                    self.todo.update_task(task_id, payload)
+                    counts["updated"] += 1
                 self.state.upsert(assignment, task_id, current_hash)
                 continue
 
