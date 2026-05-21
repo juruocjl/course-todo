@@ -138,6 +138,7 @@ class PkuCourseClient:
         headless: bool = True,
         max_pages: int = 80,
         completed_cache: Mapping[str, Assignment] | None = None,
+        review_assignments: list[Assignment] | None = None,
     ) -> list[Assignment]:
         sync_playwright = _playwright()
         if not self.storage_state.exists():
@@ -151,6 +152,19 @@ class PkuCourseClient:
             page.goto(self.base_url, wait_until="networkidle")
             self._ensure_logged_in(page, context)
             assignments = self._fetch_alert_assignments(context, completed_cache or {})
+            for assignment in review_assignments or []:
+                if assignment.source_id in {item.source_id for item in assignments}:
+                    continue
+                refreshed = self._assignment_detail(
+                    context,
+                    {
+                        "title": assignment.title,
+                        "course": assignment.course_name,
+                        "url": assignment.url,
+                        "text": assignment.raw_status or "",
+                    },
+                )
+                assignments.append(refreshed)
             if not assignments:
                 assignments = self._crawl(context, page, max_pages=max_pages)
             browser.close()

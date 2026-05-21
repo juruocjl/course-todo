@@ -179,6 +179,34 @@ class StateStore:
             for row in rows
         }
 
+    def pending_assignments(self) -> list[Assignment]:
+        with self.connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT source_id, course_name, title, url, due_at, last_status, raw_status
+                FROM assignments
+                WHERE last_status != ?
+                  AND course_name IS NOT NULL
+                  AND title IS NOT NULL
+                  AND url IS NOT NULL
+                ORDER BY last_seen_at DESC
+                LIMIT 100
+                """,
+                (AssignmentStatus.COMPLETED.value,),
+            ).fetchall()
+        return [
+            Assignment(
+                source_id=row["source_id"],
+                course_name=row["course_name"],
+                title=row["title"],
+                url=row["url"],
+                due_at=datetime.fromisoformat(row["due_at"]) if row["due_at"] else None,
+                status=AssignmentStatus(row["last_status"]),
+                raw_status=row["raw_status"],
+            )
+            for row in rows
+        ]
+
 
 def _assignment_hash(assignment: Assignment) -> str:
     from .pku import assignment_hash

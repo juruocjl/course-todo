@@ -51,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
             assignments = pku.fetch_assignments(
                 headless=config.pku_headless,
                 completed_cache=state.completed_assignments(),
+                review_assignments=state.pending_assignments(),
             )
             if args.dry_run:
                 state.cache_assignments(assignments)

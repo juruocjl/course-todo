@@ -128,6 +128,25 @@ def test_cached_assignment_without_task_mapping_does_not_block_creation(tmp_path
     assert state.completed_assignments()[item.source_id].status == AssignmentStatus.COMPLETED
 
 
+def test_state_returns_pending_assignments(tmp_path):
+    state = StateStore(tmp_path / "state.sqlite3")
+    open_item = assignment(AssignmentStatus.OPEN)
+    done_item = assignment(AssignmentStatus.COMPLETED, title="Done")
+    done_item = type(done_item)(
+        source_id="source-2",
+        course_name=done_item.course_name,
+        title=done_item.title,
+        url="https://course.pku.edu.cn/done",
+        due_at=done_item.due_at,
+        status=done_item.status,
+        raw_status=done_item.raw_status,
+    )
+    state.upsert(open_item, "task-1", assignment_hash(open_item))
+    state.upsert(done_item, "task-2", assignment_hash(done_item))
+    pending = state.pending_assignments()
+    assert [item.source_id for item in pending] == [open_item.source_id]
+
+
 def test_sync_reuses_existing_todoist_task_by_source_url(tmp_path):
     class ExistingTaskTodo(FakeTodo):
         def find_task_by_source(self, project_id, source_url):
