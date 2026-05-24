@@ -11,6 +11,7 @@ class FakeTodo:
         self.created = []
         self.updated = []
         self.completed = []
+        self.existing_task_id = None
 
     def ensure_task_list(self, display_name):
         return "list-1"
@@ -23,13 +24,16 @@ class FakeTodo:
         return f"task-{len(self.created)}"
 
     def find_task_by_source(self, project_id, source_url):
-        return None
+        return self.existing_task_id
 
     def update_task(self, task_id, payload):
         self.updated.append((task_id, payload))
 
     def complete_task(self, task_id):
         self.completed.append(task_id)
+
+    def reopen_task(self, task_id):
+        self.updated.append((task_id, {"reopened": True}))
 
 
 class FakeBark:
@@ -98,6 +102,29 @@ def test_sync_completes_existing_task_when_course_completed(tmp_path):
     counts = service.sync([assignment(AssignmentStatus.COMPLETED)])
     assert counts["completed"] == 1
     assert todo.completed == ["task-1"]
+
+
+def test_sync_reopens_task_when_false_completed_assignment_becomes_unknown(tmp_path):
+    state = StateStore(tmp_path / "state.sqlite3")
+    todo = FakeTodo()
+    service = SyncService(state, todo, "PKU Course")
+    service.sync([assignment(AssignmentStatus.COMPLETED)])
+    counts = service.sync([assignment(AssignmentStatus.UNKNOWN)])
+    assert counts["reopened"] == 1
+    assert todo.updated[0] == ("task-1", {"reopened": True})
+
+
+def test_sync_reuses_active_duplicate_instead_of_reopening_completed_mapping(tmp_path):
+    state = StateStore(tmp_path / "state.sqlite3")
+    todo = FakeTodo()
+    service = SyncService(state, todo, "PKU Course")
+    service.sync([assignment(AssignmentStatus.COMPLETED)])
+    todo.existing_task_id = "active-task"
+    counts = service.sync([assignment(AssignmentStatus.UNKNOWN)])
+    assert counts["reopened"] == 0
+    assert todo.updated[0][0] == "active-task"
+    assert todo.updated[0][1]["content"] == "[Math] HW1"
+    assert state.get("source-1").task_id == "active-task"
 
 
 def test_sync_updates_changed_open_assignment(tmp_path):

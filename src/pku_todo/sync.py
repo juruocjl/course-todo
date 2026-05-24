@@ -42,7 +42,14 @@ class SyncService:
 
     def sync(self, assignments: list[Assignment]) -> dict[str, int]:
         project_id = self.todo.ensure_project(self.project_name)
-        counts = {"seen": len(assignments), "created": 0, "updated": 0, "completed": 0, "notified": 0}
+        counts = {
+            "seen": len(assignments),
+            "created": 0,
+            "updated": 0,
+            "completed": 0,
+            "reopened": 0,
+            "notified": 0,
+        }
 
         for assignment in assignments:
             current_hash = assignment_hash(assignment)
@@ -65,17 +72,25 @@ class SyncService:
                 self.state.upsert(assignment, task_id, current_hash)
                 continue
 
+            task_id = mapping.task_id
             if mapping.assignment_hash != current_hash and assignment.status != AssignmentStatus.COMPLETED:
-                self.todo.update_task(mapping.task_id, task_payload(assignment))
+                if mapping.last_status == AssignmentStatus.COMPLETED:
+                    active_task_id = self.todo.find_task_by_source(project_id, assignment.url)
+                    if active_task_id and active_task_id != mapping.task_id:
+                        task_id = active_task_id
+                    else:
+                        self.todo.reopen_task(task_id)
+                        counts["reopened"] += 1
+                self.todo.update_task(task_id, task_payload(assignment))
                 counts["updated"] += 1
 
             if (
                 assignment.status == AssignmentStatus.COMPLETED
                 and mapping.last_status != AssignmentStatus.COMPLETED
             ):
-                self.todo.complete_task(mapping.task_id)
+                self.todo.complete_task(task_id)
                 counts["completed"] += 1
 
-            self.state.upsert(assignment, mapping.task_id, current_hash)
+            self.state.upsert(assignment, task_id, current_hash)
 
         return counts

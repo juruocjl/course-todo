@@ -37,6 +37,11 @@ def test_status_completed_from_blackboard_submission_history():
     assert status_from_text(text) == AssignmentStatus.COMPLETED
 
 
+def test_status_not_completed_from_assignment_instructions_with_graded():
+    text = "You are expected to submit your homework. Submissions made two days after the DDL will be graded as 0."
+    assert status_from_text(text) == AssignmentStatus.UNKNOWN
+
+
 def test_stable_source_id_uses_content_id():
     assert (
         stable_source_id(

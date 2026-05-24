@@ -42,6 +42,9 @@ class TodoistClient:
     def complete_task(self, task_id: str) -> None:
         self._request("POST", f"/tasks/{task_id}/close")
 
+    def reopen_task(self, task_id: str) -> None:
+        self._request("POST", f"/tasks/{task_id}/reopen")
+
     def delete_task(self, task_id: str) -> None:
         self._request("DELETE", f"/tasks/{task_id}")
 

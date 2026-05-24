@@ -18,7 +18,7 @@ ASSIGNMENT_KEYWORDS = (
     "submit",
     "测验",
 )
-COMPLETED_HINTS = ("已提交", "已完成", "已评分", "已批改", "submitted", "completed", "graded")
+COMPLETED_HINTS = ("已提交", "已完成", "已评分", "已批改")
 OPEN_HINTS = ("未提交", "未完成", "待提交", "not submitted", "incomplete")
 ALERTS_URL = "/webapps/streamViewer/streamViewer?cmd=view&streamName=alerts&globalNavigation=false"
 
@@ -189,10 +189,6 @@ class PkuCourseClient:
 
         assignments: dict[str, Assignment] = {}
         for entry in entries:
-            source_id = stable_source_id(entry["course"], entry["title"], entry["url"], None)
-            if source_id in completed_cache:
-                assignments[source_id] = completed_cache[source_id]
-                continue
             detail = self._assignment_detail(context, entry)
             assignments[detail.source_id] = detail
         return sorted(assignments.values(), key=lambda item: (item.due_at or datetime.max, item.title))
