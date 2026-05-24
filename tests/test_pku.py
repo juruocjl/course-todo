@@ -28,13 +28,18 @@ def test_status_open_takes_precedence_over_submitted_hint():
     assert status_from_text("未提交 not submitted") == AssignmentStatus.OPEN
 
 
-def test_status_completed():
-    assert status_from_text("状态：已提交，等待批改") == AssignmentStatus.COMPLETED
+def test_status_chinese_submitted_hint_alone_is_not_completed():
+    assert status_from_text("状态：已提交，等待批改") == AssignmentStatus.UNKNOWN
 
 
 def test_status_completed_from_blackboard_submission_history():
     text = "复查提交历史记录: Assignment 2 作业详细信息 成绩 尝试 26-4-20 下午7:29 提交 file.zip"
     assert status_from_text(text) == AssignmentStatus.COMPLETED
+
+
+def test_status_not_completed_from_upload_page_submit_instructions():
+    text = "上载作业：Assignment 3 作业提交 文本提交 附加文件 完成后，请务必单击提交。"
+    assert status_from_text(text) == AssignmentStatus.UNKNOWN
 
 
 def test_status_not_completed_from_assignment_instructions_with_graded():

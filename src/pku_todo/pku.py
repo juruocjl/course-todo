@@ -18,7 +18,6 @@ ASSIGNMENT_KEYWORDS = (
     "submit",
     "测验",
 )
-COMPLETED_HINTS = ("已提交", "已完成", "已评分", "已批改")
 OPEN_HINTS = ("未提交", "未完成", "待提交", "not submitted", "incomplete")
 ALERTS_URL = "/webapps/streamViewer/streamViewer?cmd=view&streamName=alerts&globalNavigation=false"
 
@@ -70,8 +69,6 @@ def status_from_text(text: str) -> AssignmentStatus:
     lowered = text.lower()
     if any(hint.lower() in lowered for hint in OPEN_HINTS):
         return AssignmentStatus.OPEN
-    if any(hint.lower() in lowered for hint in COMPLETED_HINTS):
-        return AssignmentStatus.COMPLETED
     if "复查提交历史记录" in text and "提交" in text and "尝试" in text:
         return AssignmentStatus.COMPLETED
     if "review submission history" in lowered and "submission" in lowered and "attempt" in lowered:
