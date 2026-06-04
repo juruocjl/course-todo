@@ -1,0 +1,9 @@
+[Unit]
+Description=Sync PKU course assignments to Todoist
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/course-todo
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/ubuntu/.local/bin/uv run pku_todo sync
+

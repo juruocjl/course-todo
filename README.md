@@ -29,9 +29,10 @@ uv run pku_todo auth-pku
 uv run pku_todo sync
 ```
 
-The command creates or reuses a Todoist project named `PKU Course`, creates one task per course assignment, and marks tasks completed when the course page explicitly reports the assignment as submitted, completed, or graded.
+The command creates or reuses a Todoist project named `PKU Course`, creates one task per course assignment, and marks tasks completed only when the course page is a Blackboard submission-history page.
 
 Use cron, systemd timers, launchd, or Windows Task Scheduler to run `pku_todo sync` periodically.
+The `deploy/systemd/` directory contains user-unit templates for the current `ubuntu@hajimi` deployment.
 
 ## Notes
 

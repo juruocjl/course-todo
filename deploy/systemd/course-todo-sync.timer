@@ -1,0 +1,11 @@
+[Unit]
+Description=Run PKU course Todoist sync every 30 minutes
+
+[Timer]
+OnCalendar=*-*-* *:00,30:00
+Persistent=true
+Unit=course-todo-sync.service
+
+[Install]
+WantedBy=timers.target
+
