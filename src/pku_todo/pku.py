@@ -42,15 +42,15 @@ def parse_due_at(text: str) -> datetime | None:
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
-            groupdict = match.groupdict(default="0")
+            groupdict = match.groupdict()
             parts = {
                 k: int(v)
                 for k, v in groupdict.items()
-                if k in {"year", "month", "day", "hour", "minute"}
+                if v is not None and k in {"year", "month", "day", "hour", "minute"}
             }
-            hour = parts.get("hour") or 23
-            minute = parts.get("minute") or 59
-            ampm = groupdict.get("ampm", "").lower()
+            hour = parts["hour"] if "hour" in parts else 23
+            minute = parts["minute"] if "minute" in parts else 59
+            ampm = (groupdict.get("ampm") or "").lower()
             if ampm in {"下午", "pm"} and hour < 12:
                 hour += 12
             elif ampm in {"上午", "am"} and hour == 12:

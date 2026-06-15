@@ -14,6 +14,12 @@ def test_parse_due_at_chinese_weekday_afternoon():
     )
 
 
+def test_parse_due_at_chinese_weekday_afternoon_zero_minutes():
+    assert parse_due_at("到期日期 2026年6月21日 星期日 下午1：00") == datetime(
+        2026, 6, 21, 13, 0
+    )
+
+
 def test_parse_due_at_chinese_weekday_morning_midnight():
     assert parse_due_at("到期日期 2026年5月19日 星期二 上午12:30") == datetime(
         2026, 5, 19, 0, 30
